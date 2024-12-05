@@ -8,10 +8,13 @@
     "dev": "webpack serve --mode=development"
   },
   "dependencies": {
+    "@esotericsoftware/spine-pixi-v8": "^4.2.66",
+    "@pixi/display": "^7.4.2",
     "@types/node": "20.14.10",
     "gsap": "^3.12.5",
     "howler": "^2.2.4",
-    "pixi.js": "8.2.2",
+    "pixi-spine": "^4.0.4",
+    "pixi.js": "^8.4.0",
     "ts-node": "10.9.2",
     "webpack": "^5.96.1",
     "webpack-cli": "^5.1.4",
