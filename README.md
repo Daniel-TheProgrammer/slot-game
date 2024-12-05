@@ -43,5 +43,6 @@ Next, let’s install everything you need:
 
 - Typescript
 - Pixi.js
+- Spine
 - GSAP
 - Webpack

@@ -43,11 +43,17 @@ export default class VictoryScreen {
   showWin() {
     this.message.text = "YOU WON!";
     this.container.visible = true;
+    setTimeout(() => {
+      this.hide();
+    }, 3000); 
   }
 
   showLose() {
     this.message.text = "YOU LOST!";
     this.container.visible = true;
+    setTimeout(() => {
+      this.hide();
+    }, 3000); 
   }
 
   hide() {

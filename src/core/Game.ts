@@ -144,7 +144,6 @@ export default class Game {
     if (this.spineBoy.view.parent) {
       this.spineBoy.view.parent.removeChild(this.spineBoy.view);
     }
-    this.resetPlayButton();
   }
 
   private async handleStart() {
@@ -154,13 +153,11 @@ export default class Game {
     this.reelsContainer.spin().then(this.processSpinResult.bind(this));
 
     setTimeout(() => {
-      console.log("Re-enabling play button after spin");
       this.resetPlayButton();
     }, 1000);
   }
 
   private resetPlayButton() {
-    console.log("Resetting play button to active state");
     this.playBtn.setEnabled();
     gsap.fromTo(
       this.playBtn.sprite.scale,
@@ -186,11 +183,14 @@ export default class Game {
       this.winSound.play();
       this.scoreboard.increment();
       this.victoryScreen.showWin();
+
       this.spineBoy.direction = 1;
       this.spineBoy.playAnimation("run");
       this.app.stage.addChild(this.spineBoy.view);
+
       setTimeout(() => {
         this.removeSpineBoy();
+        this.resetPlayButton();
       }, 3000);
 
       gsap.fromTo(
@@ -198,14 +198,21 @@ export default class Game {
         { alpha: 0, y: -100 },
         { alpha: 1, y: 0, duration: 1, ease: "bounce.out" }
       );
+
+      setTimeout(() => {
+        this.victoryScreen.container.alpha = 0;
+      }, 3000);
     } else {
       this.loseSound.play();
       this.victoryScreen.showLose();
+
       this.spineBoy.direction = -1;
       this.spineBoy.playAnimation("walk");
       this.app.stage.addChild(this.spineBoy.view);
+
       setTimeout(() => {
         this.removeSpineBoy();
+        this.resetPlayButton();
       }, 3000);
 
       gsap.to(this.reelsContainer.container, {
@@ -217,12 +224,23 @@ export default class Game {
           this.reelsContainer.container.x = 0;
         },
       });
+
+      gsap.fromTo(
+        this.victoryScreen.container,
+        { alpha: 0, y: -100 },
+        { alpha: 1, y: 0, duration: 1, ease: "bounce.out" }
+      );
+
+      setTimeout(() => {
+        this.victoryScreen.container.alpha = 0;
+      }, 3000);
     }
 
     if (this.scoreboard.outOfMoney) {
       this.spineBoy.direction = 0;
       this.spineBoy.playAnimation("idle");
       this.app.stage.addChild(this.spineBoy.view);
+
       setTimeout(() => {
         this.removeSpineBoy();
       }, 3000);
