@@ -2,17 +2,11 @@ import { Spine } from "@esotericsoftware/spine-pixi-v8";
 import { Container } from "pixi.js";
 
 export class SpineBoy {
-  view: any;
+  view: Container;
   spine: Spine;
-  directionalView: any;
+  directionalView: Container;
+
   constructor() {
-    this.view = new Container();
-
-    this.spine = Spine.from({
-      skeleton: "spineSkeleton",
-      atlas: "spineAtlas",
-    });
-
     this.view = new Container();
     this.directionalView = new Container();
 
@@ -21,24 +15,29 @@ export class SpineBoy {
       atlas: "spineAtlas",
     });
 
-    this.directionalView.addChild(this.spine);
-
+    this.directionalView.addChild(this.spine as unknown as Container);
     this.view.addChild(this.directionalView);
 
-    this.spine.state.data.defaultMix = 0.2;
+    if (this.spine.state) {
+      this.spine.state.data.defaultMix = 0.2;
+    }
   }
 
   get direction() {
     return this.directionalView.scale.x > 0 ? 1 : -1;
   }
 
-  set direction(value) {
-    this.directionalView.scale.x = value;
+  set direction(value: number) {
+    this.directionalView.scale.x = value > 0 ? 1 : -1;
   }
 
-  playAnimation() {
-    const trackEntry = this.spine.state.setAnimation(0, "run", true);
-
-    trackEntry.timeScale = 1
+  playAnimation(name: string) {
+    if (this.spine.state) {
+      const current = this.spine.state.getCurrent(0);
+      if (current?.animation?.name !== name) {
+        const trackEntry = this.spine.state.setAnimation(0, name, true);
+        trackEntry.timeScale = name === "run" ? 1 : 0.5;
+      }
+    }
   }
 }

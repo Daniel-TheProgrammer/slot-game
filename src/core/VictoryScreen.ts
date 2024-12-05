@@ -1,55 +1,56 @@
-import { Application, Container, Graphics, TextStyle, Text } from "pixi.js";
+import { Container, Graphics, TextStyle, Text } from "pixi.js";
 
 export default class VictoryScreen {
-    public container: Container;
-    private overlay: Graphics;
+  public container: Container;
+  private overlay: Graphics;
+  private message: Text;
 
-    constructor(app: Application) {
-        this.container = new Container();
-        this.generate(app.screen.width, app.screen.height);
-    }
+  constructor(appWidth: number, appHeight: number) {
+    this.container = new Container();
+    this.generate(appWidth, appHeight);
+  }
 
-    show() {
-        this.container.visible = true;
-        const id = window.setTimeout(this.hide.bind(this), 3000);
-        const handler = () => {
-            window.clearTimeout(id);
-            this.hide();
-        };
-        this.overlay.addListener("pointerdown", handler.bind(this));
-    }
+  private generate(appWidth: number, appHeight: number) {
+    this.container.visible = false;
 
-    hide() {
-        this.container.visible = false;
-    }
+    this.overlay = new Graphics()
+      .beginFill(0xffffff, 0.001)
+      .drawRect(0, 0, appWidth, appHeight)
+      .endFill();
+    this.overlay.interactive = true;
 
-    private generate(appWidth: number, appHeight: number) {
-        this.container.visible = false;
+    const rect = new Graphics()
+      .beginFill(0x02474e, 0.8)
+      .drawRoundedRect(0, 0, 717.5, 400, 20)
+      .endFill();
+    rect.x = (appWidth - rect.width) / 2;
+    rect.y = (appHeight - rect.height) / 2;
 
-        this.overlay = new Graphics()
-            .rect(0, 0, appWidth, appHeight)
-            .fill({ color: 0xffffff, alpha: 0.001 });
+    const style = new TextStyle({
+      fontFamily: "Arial",
+      fontSize: 96,
+      fill: "yellow",
+    });
 
-        this.overlay.interactive = true;
-        this.overlay.eventMode = "static";
-        this.overlay.cursor = "default";
+    this.message = new Text("", style);
+    this.message.anchor.set(0.5);
+    this.message.x = appWidth / 2;
+    this.message.y = appHeight / 2;
 
-        const rect = new Graphics()
-            .rect(0, 0, 717.5, 400)
-            .fill({ color: 0x02474E, alpha: 0.8 });
-        rect.x = 70;
-        rect.y = (appHeight - rect.height) / 2;
+    this.container.addChild(this.overlay, rect, this.message);
+  }
 
-        const style = new TextStyle({
-            fontFamily: "Arial",
-            fontSize: 96,
-            fill: "yellow",
-        });
+  showWin() {
+    this.message.text = "YOU WON!";
+    this.container.visible = true;
+  }
 
-        const text = new Text({ text: "YOU WON!", style });
-        text.x = 70 + (rect.width - text.width) / 2;
-        text.y = (appHeight - text.height) / 2;
+  showLose() {
+    this.message.text = "YOU LOST!";
+    this.container.visible = true;
+  }
 
-        this.container.addChild(rect, text, this.overlay);
-    }
+  hide() {
+    this.container.visible = false;
+  }
 }

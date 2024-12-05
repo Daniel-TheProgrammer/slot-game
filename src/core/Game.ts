@@ -1,7 +1,6 @@
 import { Application, Assets, Container } from "pixi.js";
-import { DisplayObject } from "@pixi/display";
 import { gsap } from "gsap";
-import { Howl, Howler } from "howler";
+import { Howl } from "howler";
 import Loader from "./Loader";
 import PlayButton from "./PlayButton";
 import Background from "./Background";
@@ -23,6 +22,7 @@ export default class Game {
   private spinSound: Howl;
   private winSound: Howl;
   private loseSound: Howl;
+  private spineBoy: SpineBoy;
 
   constructor() {
     this.app = new Application();
@@ -33,15 +33,15 @@ export default class Game {
     this.loader = new Loader(this.app);
     window.document.body.appendChild(this.app.canvas);
     await this.loader.loadAssets();
-    //this.loadSounds();
-    //this.createScene();
-    //this.createPlayButton();
-   // this.createReels();
-    //this.createScoreboard();
-    //this.createVictoryScreen();
-    //this.createSoundToggle();
-    //this.playBackgroundMusic();
-    this.createSPineAnimation();
+    this.loadSounds();
+    this.createScene();
+    this.createPlayButton();
+    this.createReels();
+    this.createScoreboard();
+    this.createVictoryScreen();
+    this.createSoundToggle();
+    this.playBackgroundMusic();
+    this.createSpineBoy();
   }
 
   private loadSounds() {
@@ -70,7 +70,6 @@ export default class Game {
 
   private createScene() {
     const bg = new Background();
-
     this.app.stage.addChild(bg.sprite);
     gsap.from(bg.sprite.scale, {
       x: 0,
@@ -120,7 +119,10 @@ export default class Game {
   }
 
   private createVictoryScreen() {
-    this.victoryScreen = new VictoryScreen(this.app);
+    this.victoryScreen = new VictoryScreen(
+      this.app.screen.width,
+      this.app.screen.height
+    );
     this.app.stage.addChild(this.victoryScreen.container);
     this.victoryScreen.container.alpha = 0;
   }
@@ -130,18 +132,67 @@ export default class Game {
     this.app.stage.addChild(this.soundToggle.container);
   }
 
-  handleStart() {
+  private createSpineBoy() {
+    this.spineBoy = new SpineBoy();
+    this.spineBoy.view.x = this.app.screen.width / 2;
+    this.spineBoy.view.y = this.app.screen.height - 80;
+    const spineView = this.spineBoy.view as unknown as Container;
+    spineView.scale.set(0.5);
+  }
+
+  private removeSpineBoy() {
+    if (this.spineBoy.view.parent) {
+      this.spineBoy.view.parent.removeChild(this.spineBoy.view);
+    }
+    this.resetPlayButton();
+  }
+
+  private async handleStart() {
     this.spinSound.play();
     this.scoreboard.decrement();
     this.playBtn.setDisabled();
     this.reelsContainer.spin().then(this.processSpinResult.bind(this));
+
+    setTimeout(() => {
+      console.log("Re-enabling play button after spin");
+      this.resetPlayButton();
+    }, 1000);
+  }
+
+  private resetPlayButton() {
+    console.log("Resetting play button to active state");
+    this.playBtn.setEnabled();
+    gsap.fromTo(
+      this.playBtn.sprite.scale,
+      { x: 1.2, y: 1.2 },
+      { x: 1, y: 1, duration: 0.2 }
+    );
+
+    this.playBtn.sprite.interactive = true;
+    this.playBtn.sprite.on("pointerover", () =>
+      gsap.to(this.playBtn.sprite.scale, {
+        x: 1.2,
+        y: 1.2,
+        duration: 0.2,
+      })
+    );
+    this.playBtn.sprite.on("pointerout", () =>
+      gsap.to(this.playBtn.sprite.scale, { x: 1, y: 1, duration: 0.2 })
+    );
   }
 
   private processSpinResult(isWin: boolean) {
     if (isWin) {
       this.winSound.play();
       this.scoreboard.increment();
-      this.victoryScreen.show();
+      this.victoryScreen.showWin();
+      this.spineBoy.direction = 1;
+      this.spineBoy.playAnimation("run");
+      this.app.stage.addChild(this.spineBoy.view);
+      setTimeout(() => {
+        this.removeSpineBoy();
+      }, 3000);
+
       gsap.fromTo(
         this.victoryScreen.container,
         { alpha: 0, y: -100 },
@@ -149,6 +200,14 @@ export default class Game {
       );
     } else {
       this.loseSound.play();
+      this.victoryScreen.showLose();
+      this.spineBoy.direction = -1;
+      this.spineBoy.playAnimation("walk");
+      this.app.stage.addChild(this.spineBoy.view);
+      setTimeout(() => {
+        this.removeSpineBoy();
+      }, 3000);
+
       gsap.to(this.reelsContainer.container, {
         x: "+=10",
         duration: 0.05,
@@ -160,29 +219,13 @@ export default class Game {
       });
     }
 
-    if (!this.scoreboard.outOfMoney) {
-      this.playBtn.setEnabled();
-      gsap.fromTo(
-        this.playBtn.sprite.scale,
-        { x: 1.2, y: 1.2 },
-        { x: 1, y: 1, duration: 0.2 }
-      );
+    if (this.scoreboard.outOfMoney) {
+      this.spineBoy.direction = 0;
+      this.spineBoy.playAnimation("idle");
+      this.app.stage.addChild(this.spineBoy.view);
+      setTimeout(() => {
+        this.removeSpineBoy();
+      }, 3000);
     }
-  }
-  private createSPineAnimation() {
-    const spineBoy = new SpineBoy();
-
-    spineBoy.view.x = this.app.screen.width / 2;
-    spineBoy.view.y = this.app.screen.height - 80;
-
-    const spineView = spineBoy.view as unknown as Container;
-
-    spineView.scale.set(0.5);
-
-    this.app.stage.addChild(spineView);
-
-    this.app.ticker.add(() => {
-      spineBoy.playAnimation();
-    });
   }
 }

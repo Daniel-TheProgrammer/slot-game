@@ -20,8 +20,7 @@ export default class ReelsContainer {
     }
 
     async spin() {
-        // Overall time of spinning = shiftingDelay * this.reels.length
-        //
+        
         const shiftingDelay = 500;
         const start = Date.now();
         const reelsToSpin = [...this.reels];
@@ -36,8 +35,7 @@ export default class ReelsContainer {
             if (!reelsToSpin.length) break;
         }
 
-        // reel.sprites[2] - Middle visible symbol of the reel
-        //
+        
         return this.checkForWin(this.reels.map(reel => reel.sprites[2]));
     }
 
@@ -51,8 +49,7 @@ export default class ReelsContainer {
     }
 
     private checkForWin(symbols: Array<Sprite>): boolean {
-        // Set of strings: "SYM1", "SYM2", ...
-        //
+       
         const combination: Set<string> = new Set();
         symbols.forEach(symbol => combination.add(symbol.texture.label!.split(".")[0]));
         if (combination.size === 1 && !combination.has("SYM1")) return true;
